@@ -1,0 +1,8 @@
+navpills: |
+  <li class='{{{active}}}'><a href="index.html">All Datasets</a></li>
+  <li role="presentation" class="dropdown {{dd_active}}">
+  <a id="study-drop" href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false">Dataset {{{id}}}<span class="caret"></span></a>
+  <ul id="menu1" class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="study-drop">{{#navpills}}
+  <li class='{{{active}}}'><a href='{{{id}}}.html'>{{{id}}}</a></li>{{{/navpills}}}
+  </ul>
+  </li>

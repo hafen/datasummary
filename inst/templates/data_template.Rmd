@@ -1,0 +1,73 @@
+---
+title: "{{{title}}}"
+author: {{{author}}}
+output:
+  packagedocs:
+    toc: true
+    css: menu-fix.css{{{navpills}}}
+---
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rbokeh)
+library(knitr)
+load("{{{di_path}}}")
+```
+
+
+```{r echo=FALSE, results='asis'}
+if(!is.null(di$meta)) {
+  nms <- names(di$meta)
+  tmpdf <- data.frame(
+    v1 = gsub("_", " ", nms),
+    v2 = unname(unlist(di$meta)))
+
+  txt <- c("# Meta #", "",
+    "|  property  |  value  |",
+    "| ---------- | ------- |",
+    apply(tmpdf, 1, function(x) {
+      paste("|", paste(x, collapse = " | "), "|")}))
+
+  cat(paste(txt, collapse = "\n"))
+}
+```
+
+# Sample #
+
+```{r echo=FALSE}
+di$head
+```
+
+# Missing Values #
+
+```{r echo=FALSE, message=FALSE}
+plot_missing(di)
+```
+
+# Variables #
+
+<!--
+
+```{r echo=FALSE, results='asis'}
+vartab <- data.frame(variable = names(di$var_summ), type = unname(sapply(di$var_summ, function(x) x$type)))
+knitr::kable(vartab)
+```
+-->
+
+```{r echo=FALSE, results='asis'}
+txt <- ""
+if(length(di$na_cols) > 0)
+ txt <- c(paste0("The following variables are all NA: `",
+  paste0(names(di$na_cols), collapse = "`, `"), "`"), "")
+
+if(length(di$dups) > 0) {
+  txt <- c(txt, "The following variables are duplicates:", "",
+    sapply(di$dups, function(x) {
+      paste0("- `", paste0(x, collapse = "`, `"), "`")
+    }), "")
+
+cat(paste(txt, collapse = "\n"))
+}
+```
+
+{{{var_summaries}}}

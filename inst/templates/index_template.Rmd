@@ -1,0 +1,44 @@
+---
+title: "{{{title}}}"
+author: {{{author}}}
+output:
+  packagedocs:
+    toc: true
+    css: menu-fix.css{{{navpills}}}
+---
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rbokeh)
+library(knitr)
+load("{{{di_list_path}}}")
+load("{{{extra_path}}}")
+for(nm in names(dots))
+  assign(nm, dots[[nm]])
+```
+
+{{{intro_rmd}}}
+
+# Common Variables #
+
+The plots below shows how many times a variable is found across all of the data sets.
+
+```{r echo=FALSE, message=FALSE}
+plot_common_vars_tab(di_list)
+```
+
+```{r echo=FALSE, message=FALSE}
+plot_common_vars_freq(di_list)
+```
+
+# Number of Rows #
+
+```{r echo=FALSE, message=FALSE}
+plot_nrows(di_list)
+```
+
+# Number of Variables #
+
+```{r echo=FALSE, message=FALSE}
+plot_nvars(di_list)
+```

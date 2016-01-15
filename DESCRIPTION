@@ -1,0 +1,20 @@
+Package: datasummary
+Title: Create A Summary Report for a Collection of Data Sets
+Version: 0.1.0
+Authors@R: person("Ryan", "Hafen", email = "rhafen@gmail.com", role = c("aut", "cre"))
+Description: .
+Depends:
+    R (>= 3.1),
+License: BSD_3_clause + file LICENSE
+LazyData: true
+Imports:
+    rmarkdown,
+    packagedocs,
+    rbokeh,
+    digest,
+    DistributionUtils,
+    dplyr,
+    whisker,
+    knitr,
+    DT
+RoxygenNote: 5.0.1
