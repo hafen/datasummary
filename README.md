@@ -25,3 +25,4 @@ iris2 <- data.frame(iris, newvar = rnorm(150))
 build_pages(list(iris = iris, iris2 = iris2), title = "iris data",
   output_dir = file.path(tempdir(), "test2"), view = TRUE)
 ```
+
