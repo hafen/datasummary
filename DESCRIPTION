@@ -1,6 +1,6 @@
 Package: datasummary
 Title: Create A Summary Report for a Collection of Data Sets
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Ryan", "Hafen", email = "rhafen@gmail.com", role = c("aut", "cre"))
 Description: .
 Depends:
@@ -16,5 +16,6 @@ Imports:
     dplyr,
     whisker,
     knitr,
-    DT
+    DT,
+    lazyrmd
 RoxygenNote: 5.0.1

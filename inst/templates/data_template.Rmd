@@ -5,6 +5,7 @@ output:
   packagedocs:
     toc: true
     css: menu-fix.css{{{navpills}}}
+extra_credits: and <a href='https://github.com/hafen/datasummary'>datasummary</a>
 ---
 
 
@@ -13,6 +14,8 @@ library(rbokeh)
 library(knitr)
 load("{{{di_path}}}")
 ```
+
+{{{intro_rmd}}}
 
 
 ```{r echo=FALSE, results='asis'}
@@ -32,10 +35,14 @@ if(!is.null(di$meta)) {
 }
 ```
 
-# Sample #
+# Data #
+
+There are `r di$nrow` records for `r di$ncol` variables.
+
+A sample of the data:
 
 ```{r echo=FALSE}
-di$head
+DT::datatable(di$head, rownames = FALSE)
 ```
 
 # Missing Values #
@@ -43,8 +50,6 @@ di$head
 ```{r echo=FALSE, message=FALSE}
 plot_missing(di)
 ```
-
-# Variables #
 
 <!--
 
@@ -56,6 +61,9 @@ knitr::kable(vartab)
 
 ```{r echo=FALSE, results='asis'}
 txt <- ""
+if(length(di$na_cols) > 0 || length(di$dups) > 0)
+  txt <- "# Notes #\n\n"
+
 if(length(di$na_cols) > 0)
  txt <- c(paste0("The following variables are all NA: `",
   paste0(names(di$na_cols), collapse = "`, `"), "`"), "")
@@ -71,3 +79,6 @@ cat(paste(txt, collapse = "\n"))
 ```
 
 {{{var_summaries}}}
+
+
+{{{post_rmd}}}

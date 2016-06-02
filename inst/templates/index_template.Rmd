@@ -5,6 +5,7 @@ output:
   packagedocs:
     toc: true
     css: menu-fix.css{{{navpills}}}
+extra_credits: and <a href='https://github.com/hafen/datasummary'>datasummary</a>
 ---
 
 

@@ -5,11 +5,12 @@
 #' @param author name of author
 #' @param output_dir directory where output html files should be placed
 #' @param index should an index page be built as well?
-#' @param intro_rmd passed on to \code{\link{build_index_page}}
+#' @param idx_intro_rmd passed on to \code{\link{build_index_page}}
+#' @param data_intro_rmd vector of R Markdown strings or paths to .Rmd files passed on to \code{\link{build_data_page}} for each entry in \code{di_list}
 #' @param view should the index page be opened in a browser after it is rendered?
 #'
 #' @export
-build_pages <- function(di_list, title = "", author = "", output_dir, index = TRUE, intro_rmd = "", view = FALSE) {
+build_pages <- function(di_list, title = "", author = "", output_dir, index = TRUE, idx_intro_rmd = "", data_intro_rmd = rep("", length(di_list)), view = FALSE) {
 
   output_dir <- check_output(output_dir)
 
@@ -21,11 +22,11 @@ build_pages <- function(di_list, title = "", author = "", output_dir, index = TR
     message("* building ", di_list[[ii]]$id)
     title1 <- paste0(title, ": ", di_list[[ii]]$id)
     build_data_page(di_list[[ii]], title = title1, author = author,
-      output_dir = output_dir, ids = ids)
+      output_dir = output_dir, ids = ids, intro_rmd = data_intro_rmd[i])
   }
   if(index)
     build_index_page(di_list, title = title, author = author,
-      output_dir = output_dir, intro_rmd = intro_rmd)
+      output_dir = output_dir, intro_rmd = data_intro_rmd)
 
   mfpath <- file.path(system.file(package = "datasummary"),
     "templates/menu-fix.css")
@@ -46,12 +47,14 @@ build_pages <- function(di_list, title = "", author = "", output_dir, index = TR
 #' @param output_dir directory where output html file should be placed
 #' @param ids an optional list of ids to be used to generate links to pages for other data sets
 #' @param view should the page be opened in a browser after it is rendered?
+#' @param intro_rmd optional R markdown string or file path that will be placed at beginning of the page
+#' @param post_rmd optional R markdown string or file path that will be placed at end of the page
 #'
 #' @export
 #' @importFrom whisker whisker.render
 #' @importFrom rmarkdown render
 #' @importFrom packagedocs package_docs
-build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL, view = FALSE) {
+build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL, view = FALSE, intro_rmd = "", post_rmd = "") {
 
   if(is.data.frame(di))
     di <- get_data_info(di)
@@ -63,12 +66,20 @@ build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL,
   ff <- tempfile()
   save(di, file = ff)
 
+  if(file.exists(intro_rmd))
+    intro_rmd <- paste0(readLines(intro_rmd), collapse = "\n")
+
+  if(file.exists(post_rmd))
+    post_rmd <- paste0(readLines(post_rmd), collapse = "\n")
+
   tmpldat <- list(
     title = title,
     author = author,
     navpills = navpills,
     di_path = ff,
-    var_summaries = get_var_summary_sections(di)
+    var_summaries = get_var_summary_sections(di),
+    intro_rmd = intro_rmd,
+    post_rmd = post_rmd
   )
 
   tmpl_path <- file.path(system.file(package = "datasummary"),
@@ -81,7 +92,7 @@ build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL,
 
   rmarkdown::render(file.path(output_dir, ff),
     output_format = packagedocs::package_docs(lib_dir = file.path(output_dir, "assets"),
-      css = "assets/menu-fix.css"),
+      css = "assets/menu-fix.css", toc_collapse = TRUE),
     output_dir = output_dir)
 
   mfpath <- file.path(system.file(package = "datasummary"),
@@ -100,7 +111,7 @@ build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL,
 #' @param title page title
 #' @param author name of author
 #' @param output_dir directory where output html files should be placed
-#' @param intro_rmd optional R markdown string that will be placed at beginning of the page
+#' @param intro_rmd optional R markdown string or file path that will be placed at beginning of the page
 #' @param \ldots data to be saved and loaded in to the document's knitr environment
 #'
 #' @export
@@ -121,6 +132,9 @@ build_index_page <- function(di_list, title = "", author = "", output_dir, intro
   dots <- list(...)
   save(dots, file = eff)
 
+  if(file.exists(intro_rmd))
+    intro_rmd <- paste0(readLines(intro_rmd), collapse = "\n")
+
   tmpldat <- list(
     title = title,
     author = author,
@@ -140,7 +154,7 @@ build_index_page <- function(di_list, title = "", author = "", output_dir, intro
 
   rmarkdown::render(pf,
     output_format = packagedocs::package_docs(lib_dir = file.path(output_dir, "assets"),
-      css = "assets/menu-fix.css"),
+      css = "assets/menu-fix.css", toc_collapse = TRUE),
     output_dir = output_dir)
 
   mfpath <- file.path(system.file(package = "datasummary"),
@@ -207,7 +221,17 @@ get_navpills <- function(ids, cur_id = NULL) {
 
 
 get_var_summary_sections <- function(di) {
-  a <- sapply(di$var_summ, get_var_summary_section)
+  # make a variables section for each group
+  gps <- unlist(lapply(di$var_summ, function(x) {
+    ifelse(is.null(x$group), "", x$group)
+  }))
+  ugps <- unique(gps)
+  a <- unlist(lapply(ugps, function(x) {
+    a <- sapply(di$var_summ[gps == x], get_var_summary_section)
+    lbl <- ifelse(x == "", "# Variables", paste0("# Variables: ", x))
+    paste(c(lbl, "", a, collapse = "\n"))
+  }))
+
   paste(a, collapse = "\n")
 }
 
@@ -216,8 +240,8 @@ get_var_summary_section <- function(vr) {
     header <- paste0("### Distribution",
       ifelse(vr$truncated, " of top 50 variables", ""), " ###")
     txt <- c(header, "",
-      ifelse(vr$log, paste0("Due to high skewness, the plot below is shown with the variable transformed to the log scale.  There were ", vr$n0, " zeros removed prior to transformation."), ""),
-      "```{r, echo=FALSE, message=FALSE, results='asis'}",
+      ifelse(vr$log, paste0("Due to high skewness, the plot below is shown with the variable transformed to the log scale.", ifelse(vr$n0 > 0, paste0("There were ", vr$n0, " zeros removed prior to transformation."), "")), ""),
+      paste0("```{r var_", vr$name, ", echo=FALSE, message=FALSE, results='asis', lazy=TRUE}"), ##lazy
       paste0("vr <- di$var_summ[[\"", vr$name, "\"]]"),
       "vr$artifacts$fg", "```", "")
 
@@ -229,7 +253,7 @@ get_var_summary_section <- function(vr) {
       "```", "")
   } else if(vr$type == "numeric") {
     txt <- c("### Distribution ###", "",
-      "```{r, echo=FALSE, message=FALSE, results='asis'}",
+      "```{r, echo=FALSE, message=FALSE, results='asis', lazy=TRUE}", ##lazy
       paste0("vr <- di$var_summ[[\"", vr$name, "\"]]"),
       "vr$artifacts$fg", "```", "")
 
@@ -240,8 +264,10 @@ get_var_summary_section <- function(vr) {
   } else {
     txt <- ""
   }
-  if(length(txt) > 1)
-    txt <- c(paste("##", vr$name, "##"), "", txt)
+  if(length(txt) > 1) {
+    txt <- c(paste("##", vr$name, "##"), "",
+      ifelse(!is.null(vr$label), vr$label, ""), "", txt)
+  }
 
   paste(txt, collapse = "\n")
 }

@@ -17,8 +17,9 @@ plot_cat <- function(dtab, width = 750, min_height = 400) {
   dtab$value2 <- paste(seq_along(dtab$value2), dtab$value2, sep = "- ")
   # workaround because bokeh doesn't like ":" in axis labels
   dtab$value2 <- gsub(":", "_", dtab$value2)
-  rbokeh::figure(ylim = rev(dtab$value2), ylab = NULL,
+  rbokeh::figure(ylim = rev(dtab$value2), ylab = NULL, xlab = "Frequency",
     width = width, height = max(min_height, 100 + 12 * nrow(dtab))) %>%
+    rbokeh::ly_segments(0, value2, Freq, value2, data = dtab, color = "#1F77B4") %>%
     rbokeh::ly_points(Freq, value2, hover = list(value, Freq), data = dtab)
 }
 
@@ -31,11 +32,15 @@ plot_cat <- function(dtab, width = 750, min_height = 400) {
 #' @param height height of the plot in pixels
 #'
 #' @export
-plot_num <- function(hst, xlab = "x", log = FALSE, width = 750, height = 520) {
-  fg <- figure(xlab = xlab, width = 750) %>% ly_hist(hst)
+plot_num <- function(hst, qnt, xlab = "x", log = FALSE, width = 750, height = 520) {
+  fg1 <- figure(xlab = xlab, width = 400, height = 450) %>% ly_hist(hst)
   if(log)
-    fg <- fg %>% x_axis(log = TRUE)
-  fg
+    fg1 <- fg1 %>% x_axis(log = TRUE)
+  fg2 <- figure(ylab = xlab, width = 400, height = 450, xlab = "Proportion") %>%
+    ly_points(x, y, data = qnt)
+  if(log)
+    fg2 <- fg2 %>% y_axis(log = TRUE)
+  grid_plot(list(fg1, fg2), nrow = 1)
 }
 
 #' Plot number of missing values for each variable in a data frame
