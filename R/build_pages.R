@@ -10,7 +10,9 @@
 #' @param view should the index page be opened in a browser after it is rendered?
 #'
 #' @export
-build_pages <- function(di_list, title = "", author = "", output_dir, index = TRUE, idx_intro_rmd = "", data_intro_rmd = rep("", length(di_list)), view = FALSE) {
+build_pages <- function(di_list, title = "", author = "", output_dir,
+  index = TRUE, idx_intro_rmd = "", data_intro_rmd = rep("", length(di_list)),
+  view = FALSE) {
 
   output_dir <- check_output(output_dir)
 
@@ -18,13 +20,13 @@ build_pages <- function(di_list, title = "", author = "", output_dir, index = TR
 
   ids <- unname(unlist(lapply(di_list, function(x) x$id)))
 
-  for(ii in seq_along(di_list)) {
+  for (ii in seq_along(di_list)) {
     message("* building ", di_list[[ii]]$id)
     title1 <- paste0(title, ": ", di_list[[ii]]$id)
     build_data_page(di_list[[ii]], title = title1, author = author,
       output_dir = output_dir, ids = ids, intro_rmd = data_intro_rmd[i])
   }
-  if(index)
+  if (index)
     build_index_page(di_list, title = title, author = author,
       output_dir = output_dir, intro_rmd = data_intro_rmd)
 
@@ -33,7 +35,7 @@ build_pages <- function(di_list, title = "", author = "", output_dir, index = TR
   file.copy(mfpath, file.path(output_dir, "assets/"), overwrite = TRUE)
 
   ff <- file.path(output_dir, paste0("index.html"))
-  if(view && file.exists(ff))
+  if (view && file.exists(ff))
     browseURL(ff)
 
   invisible(TRUE)
@@ -54,9 +56,10 @@ build_pages <- function(di_list, title = "", author = "", output_dir, index = TR
 #' @importFrom whisker whisker.render
 #' @importFrom rmarkdown render
 #' @importFrom packagedocs package_docs
-build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL, view = FALSE, intro_rmd = "", post_rmd = "") {
+build_data_page <- function(di, title = "", author = "", output_dir,
+  ids = NULL, view = FALSE, intro_rmd = "", post_rmd = "") {
 
-  if(is.data.frame(di))
+  if (is.data.frame(di))
     di <- get_data_info(di)
 
   output_dir <- check_output(output_dir)
@@ -66,10 +69,10 @@ build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL,
   ff <- tempfile()
   save(di, file = ff)
 
-  if(file.exists(intro_rmd))
+  if (file.exists(intro_rmd))
     intro_rmd <- paste0(readLines(intro_rmd), collapse = "\n")
 
-  if(file.exists(post_rmd))
+  if (file.exists(post_rmd))
     post_rmd <- paste0(readLines(post_rmd), collapse = "\n")
 
   tmpldat <- list(
@@ -99,7 +102,7 @@ build_data_page <- function(di, title = "", author = "", output_dir, ids = NULL,
     "templates/menu-fix.css")
   file.copy(mfpath, file.path(output_dir, "assets/"), overwrite = TRUE)
 
-  if(view)
+  if (view)
     browseURL(file.path(output_dir, paste0(di$id, ".html")))
 
   invisible(TRUE)
@@ -132,7 +135,7 @@ build_index_page <- function(di_list, title = "", author = "", output_dir, intro
   dots <- list(...)
   save(dots, file = eff)
 
-  if(file.exists(intro_rmd))
+  if (file.exists(intro_rmd))
     intro_rmd <- paste0(readLines(intro_rmd), collapse = "\n")
 
   tmpldat <- list(
@@ -170,18 +173,19 @@ build_index_page <- function(di_list, title = "", author = "", output_dir, intro
 check_output <- function(output_dir) {
   output_dir <- normalizePath(output_dir)
   assets_dir <- file.path(output_dir, "assets")
-  if(!file.exists(output_dir))
+  if (!file.exists(output_dir))
     dir.create(output_dir)
-  if(!file.exists(assets_dir))
+  if (!file.exists(assets_dir))
     dir.create(assets_dir)
 
   output_dir
 }
 
 check_di_list <- function(di_list) {
-  if(!inherits(di_list, "data_info") && is.list(di_list) && all(sapply(di_list, is.data.frame))) {
-    if(is.null(names(di_list)))
-      stop("di_list must either be a named list of data frames or a list of objects from get_data_info()", call. = FALSE)
+  if (!inherits(di_list, "data_info") && is.list(di_list) && all(sapply(di_list, is.data.frame))) {
+    if (is.null(names(di_list)))
+      stop("di_list must either be a named list of data frames or ",
+        "a list of objects from get_data_info()", call. = FALSE)
 
     return(lapply(names(di_list), function(nm) {
       get_data_info(di_list[[nm]], id = nm)
@@ -192,16 +196,16 @@ check_di_list <- function(di_list) {
 }
 
 get_navpills <- function(ids, cur_id = NULL) {
-  if(is.null(ids))
+  if (is.null(ids))
     return("")
 
-  if(is.null(cur_id)) {
+  if (is.null(cur_id)) {
     cur_id <- "*&^%%#&^%*()(*&%$%#@)"
     pid <- ""
-    pactive = "active"
+    pactive <- "active"
   } else {
     pid <- paste0("(", cur_id, ")")
-    pactive = ""
+    pactive <- ""
   }
 
   tmpldat <- list(
@@ -219,7 +223,6 @@ get_navpills <- function(ids, cur_id = NULL) {
   paste0("\n", whisker::whisker.render(tmpl, tmpldat))
 }
 
-
 get_var_summary_sections <- function(di) {
   # make a variables section for each group
   gps <- unlist(lapply(di$var_summ, function(x) {
@@ -236,12 +239,18 @@ get_var_summary_sections <- function(di) {
 }
 
 get_var_summary_section <- function(vr) {
-  if(vr$type == "character") {
+  if (vr$type == "character") {
     header <- paste0("### Distribution",
       ifelse(vr$truncated, " of top 50 variables", ""), " ###")
     txt <- c(header, "",
-      ifelse(vr$log, paste0("Due to high skewness, the plot below is shown with the variable transformed to the log scale.", ifelse(vr$n0 > 0, paste0("There were ", vr$n0, " zeros removed prior to transformation."), "")), ""),
-      paste0("```{r var_", vr$name, ", echo=FALSE, message=FALSE, results='asis', lazy=TRUE}"), ##lazy
+      ifelse(vr$log,
+        paste0("Due to high skewness, the plot below is shown with the ",
+          "variable transformed to the log scale.",
+          ifelse(vr$n0 > 0,
+            paste0("There were ", vr$n0,
+              " zeros removed prior to transformation."), "")), ""),
+      paste0("```{r var_", vr$name,
+        ", echo=FALSE, message=FALSE, results='asis', lazy=TRUE}"), ##lazy
       paste0("vr <- di$var_summ[[\"", vr$name, "\"]]"),
       "vr$artifacts$fg", "```", "")
 
@@ -251,7 +260,7 @@ get_var_summary_section <- function(vr) {
       "```{r, echo=FALSE, message=FALSE, results='asis'}",
       "vr$artifacts$tb",
       "```", "")
-  } else if(vr$type == "numeric") {
+  } else if (vr$type == "numeric") {
     txt <- c("### Distribution ###", "",
       "```{r, echo=FALSE, message=FALSE, results='asis', lazy=TRUE}", ##lazy
       paste0("vr <- di$var_summ[[\"", vr$name, "\"]]"),
@@ -264,7 +273,7 @@ get_var_summary_section <- function(vr) {
   } else {
     txt <- ""
   }
-  if(length(txt) > 1) {
+  if (length(txt) > 1) {
     txt <- c(paste("##", vr$name, "##"), "",
       ifelse(!is.null(vr$label), vr$label, ""), "", txt)
   }

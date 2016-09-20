@@ -1,4 +1,5 @@
-globalVariables(c("hst", "variable", "count", "type", "Freq", "value2", "value", "variable", "present", "n", "Freq", "id", "nvar"))
+utils::globalVariables(c("hst", "variable", "count", "type", "Freq",
+  "value2", "value", "variable", "present", "n", "Freq", "id", "nvar"))
 
 #' Plot a categorical frequency table
 #'
@@ -34,11 +35,11 @@ plot_cat <- function(dtab, width = 750, min_height = 400) {
 #' @export
 plot_num <- function(hst, qnt, xlab = "x", log = FALSE, width = 750, height = 520) {
   fg1 <- figure(xlab = xlab, width = 400, height = 450) %>% ly_hist(hst)
-  if(log)
+  if (log)
     fg1 <- fg1 %>% x_axis(log = TRUE)
   fg2 <- figure(ylab = xlab, width = 400, height = 450, xlab = "Proportion") %>%
     ly_points(x, y, data = qnt)
-  if(log)
+  if (log)
     fg2 <- fg2 %>% y_axis(log = TRUE)
   grid_plot(list(fg1, fg2), nrow = 1)
 }
@@ -66,4 +67,3 @@ plot_missing <- function(di, width = 800, height = 600, ...) {
     rbokeh::theme_axis("x", major_label_orientation = 60) %>%
     rbokeh::theme_grid("x", grid_line_alpha = 0.3)
 }
-

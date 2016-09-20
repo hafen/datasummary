@@ -47,7 +47,7 @@ plot_common_vars_tab <- function(di_list) {
     dplyr::arrange(-n) %>%
     dplyr::filter(n > 1))
 
-  datvars <- datvars[datvars$variable %in% tmp$variable,]
+  datvars <- datvars[datvars$variable %in% tmp$variable, ]
 
   figure(height = 800, width = 800, xlim = tmp$variable) %>%
     ly_crect(variable, id, data = datvars, hover = datvars) %>%

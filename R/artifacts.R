@@ -9,10 +9,10 @@
 get_data_info <- function(dat, meta = NULL, id = digest::digest(dat), ...) {
   cd <- sapply(dat, digest::digest)
   na_cols <- which(sapply(dat, function(x) all(is.na(x))))
-  if(length(na_cols) > 0)
+  if (length(na_cols) > 0)
     cd <- cd[-na_cols]
   cd_tab <- data.frame(table(cd), stringsAsFactors = FALSE)
-  cd_tab <- cd_tab[cd_tab$Freq > 1,]
+  cd_tab <- cd_tab[cd_tab$Freq > 1, ]
 
   dups <- lapply(cd_tab$cd, function(a) {
     names(cd)[cd == a]
@@ -26,7 +26,7 @@ get_data_info <- function(dat, meta = NULL, id = digest::digest(dat), ...) {
     head       = head(dat),
     nrow       = nrow(dat),
     ncol       = ncol(dat),
-    var_summ   = get_var_summ(dat, meta = meta),
+    var_summ   = get_var_summ(dat[setdiff(seq_len(ncol(dat)), na_cols)], meta = meta),
     ...
   ), class = c("data_info", "list"))
 
@@ -42,23 +42,23 @@ get_var_summ <- function(dat, meta = NULL) {
     x <- dat[[nm]]
     label <- NULL
     group <- NULL
-    if(is.data.frame(meta) && "name" %in% names(meta)) {
+    if (is.data.frame(meta) && "name" %in% names(meta)) {
       idx <- which(meta$name == nm)
-      if(length(idx) > 0) {
-        if("label" %in% names(meta))
+      if (length(idx) > 0) {
+        if ("label" %in% names(meta))
           label <- meta$label[idx[1]]
-        if("group" %in% names(meta))
+        if ("group" %in% names(meta))
           group <- meta$group[idx[1]]
       }
     }
-    if(is.factor(x))
+    if (is.factor(x))
       x <- as.character(x)
-    if(is.character(x)) {
+    if (is.character(x)) {
       truncated <- FALSE
       lvls <- data.frame(table(x))
       lvls$x <- as.character(lvls$x)
-      lvls <- lvls[rev(order(lvls$Freq)),]
-      if(nrow(lvls) > 100)
+      lvls <- lvls[rev(order(lvls$Freq)), ]
+      if (nrow(lvls) > 100)
         truncated <- TRUE
       return(list(
         type = "character",
@@ -70,16 +70,16 @@ get_var_summ <- function(dat, meta = NULL) {
         label = label,
         group = group
       ))
-    } else if(is.numeric(x)) {
+    } else if (is.numeric(x)) {
       n0 <- length(which(x == 0))
       skw <- DistributionUtils::skewness(x, na.rm = TRUE)
       log <- FALSE
-      if(!is.nan(skw) && skw > 1.5 && all(x >= 0, na.rm = TRUE)) {
+      if (!is.nan(skw) && skw > 1.5 && all(x >= 0, na.rm = TRUE)) {
         log <- TRUE
         x <- x[x > 0]
         x2 <- log10(x)
         rng <- range(x2, na.rm = TRUE)
-        brks <- 10^seq(rng[1], rng[2], length = nclass.Sturges(x))
+        brks <- 10 ^ seq(rng[1], rng[2], length = nclass.Sturges(x))
         hst <- hist(x, breaks = brks, plot = FALSE)
       } else {
         hst <- hist(x, plot = FALSE)
@@ -109,24 +109,26 @@ get_var_summ <- function(dat, meta = NULL) {
         group = group
       ))
     }
-  }), names = names(dat))
+  }
+  ), names = names(dat))
 }
 
 #' @importFrom knitr kable
 #' @importFrom DT datatable
 add_var_artifacts <- function(di) {
   nms <- names(di$var_summ)
-  for(ii in seq_along(di$var_summ)) {
+  for (ii in seq_along(di$var_summ)) {
+    message(ii)
     vr <- di$var_summ[[ii]]
     di$var_summ[[ii]]$artifacts <- list()
-    if(vr$type == "numeric") {
+    if (vr$type == "numeric") {
       fg <- plot_num(vr$hist, vr$qnt, xlab = nms[ii], log = vr$log)
       tb <- knitr::kable(data.frame(statistic = names(vr$summ), value = as.vector(vr$summ)))
 
       di$var_summ[[ii]]$artifacts$tb <- tb
       di$var_summ[[ii]]$artifacts$fg <- fg
 
-    } else if(vr$type == "character") {
+    } else if (vr$type == "character") {
       names(vr$lvls)[1] <- "variable"
 
       fg <- plot_cat(head(vr$lvls, 50))
@@ -140,4 +142,3 @@ add_var_artifacts <- function(di) {
   }
   di
 }
-
